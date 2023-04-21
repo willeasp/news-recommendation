@@ -1,9 +1,9 @@
 import React from "react";
-import MovieSearch from "./MovieSearch";
+import NewsSearch from "./NewsSearch";
 function App() {
   return (
     <div className="App">
-      <MovieSearch />
+      <NewsSearch />
     </div>
   );
 }
