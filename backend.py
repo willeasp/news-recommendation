@@ -5,6 +5,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import traceback
 
+from elasticsearch_dsl.query import MoreLikeThis
+
 app = Flask(__name__)
 CORS(app)
 
@@ -157,6 +159,36 @@ def insert():
     return jsonify({
         "result": "success",
         "id": res["_id"]
+    })
+
+
+@app.route("/recommend", methods=["GET", "POST"])
+# def recommendation(entry):
+def recommendation():
+    # Retrieve movie fields
+    # name = request.json['name']
+    actors = request.json['actors']
+    genre = request.json['genre']
+    # release_date = request.json['release_date']
+
+    es_search = es.search(index="movies", headers={
+                          "Content-Type": "application/json"})
+
+    res = es_search.query(MoreLikeThis(
+        like=[actors, genre],
+        fields=["actors", "genre"],
+        min_term_freq=1,
+        min_doc_freq=1))
+
+    movies = res["hits"]["hits"]
+    for movie in movies:
+        movie["_source"]["poster_url"] = get_movie_poster(
+            movie["_source"]["name"])
+
+    return jsonify({
+        "hits": {
+            "hits": movies
+        }
     })
 
 
