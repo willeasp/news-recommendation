@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-var testvar = 0
-
 const MovieSearch = () => {
   const [name, setName] = useState("");
   const [actors, setActors] = useState("");
@@ -41,32 +39,32 @@ const MovieSearch = () => {
         }
       });
       setMovies(res.data.hits.hits);
-      testvar = 0;
     };
 
     if (name || actors || genre || date) {
       searchMovies();
-    }
-    else if(testvar) {
-      recommendMovies();
     } else {
       setMovies([]);
     }
   }, [name, actors, genre, date]);
 
 
-  //Test för rekommendering -> om man klickar på en films poster ska man få rekommendationer baserat på den filmen
+  //Om man klickar på en filmposter kommer liknande filmer att rekommenderas (baserat på skådespelare och genre)
   function movieClicked(movie) {
-    testvar = 1;
     fetch('http://localhost:5000/recommend', {
-      mode: 'cors',
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Origin': 'http://localhost:3000'
       },
       body: JSON.stringify(movie._source)
-    });
-    testvar = 1; // Test för att se om något händer
+    })
+    .then(response => response.json())
+    .then(data => {
+      setMovies(data.hits.hits);
+      console.log(data);
+    })
+    .catch(error => console.error(error));
   }
   
 

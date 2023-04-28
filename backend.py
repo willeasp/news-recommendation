@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import traceback
 
+from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import MoreLikeThis
 
 app = Flask(__name__)
@@ -161,30 +162,38 @@ def insert():
         "id": res["_id"]
     })
 
+# Rekommendationsfunktionen
+
 
 @app.route("/recommend", methods=["GET", "POST"])
-# def recommendation(entry):
-def recommendation():
-    # Retrieve movie fields
+def recommend():
+
+    app.logger.info('Received request: %s %s', request.method, request.url)
+
+    # Ta ut fält från filmen som ska rekommenderas efter
     # name = request.json['name']
     actors = request.json['actors']
     genre = request.json['genre']
     # release_date = request.json['release_date']
 
-    es_search = es.search(index="movies", headers={
-                          "Content-Type": "application/json"})
+    # Elasticsearch_DSL's "Search" metod verkar behöva användas för MoreLikeThis
+    es_search = Search(index='movies').using(es)
 
-    res = es_search.query(MoreLikeThis(
+    results = es_search.query(MoreLikeThis(
+        # Det ska gå att ha listor i "like" också om man vill jämföra med mer än en sak men går inte riktigt att göra med film-systemet
         like=[actors, genre],
-        fields=["actors", "genre"],
+        fields=["actors", "genre"],  # Fält att jämföra med
         min_term_freq=1,
         min_doc_freq=1))
 
+    # Elasticsearch_DSL ger ut svaren i annat format så behöver konverteras
+    res = results.execute().to_dict()
+
+    # Samma som för vanlig sökning
     movies = res["hits"]["hits"]
     for movie in movies:
         movie["_source"]["poster_url"] = get_movie_poster(
             movie["_source"]["name"])
-
     return jsonify({
         "hits": {
             "hits": movies
