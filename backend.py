@@ -13,7 +13,7 @@ def es_create_index_if_not_exists(es, index):
     """Create the given ElasticSearch index and ignore error if it already exists"""
     try:
         print("Try to create index")
-        es.indices.create(index)
+        es.indices.create(index=index)
         print("Inserting movie metadata")
         insert_movies("movie_metadata.csv")
     except elasticsearch.exceptions.RequestError as ex:
@@ -38,7 +38,7 @@ def insert_movies(filename):
             }
 
             # insert the movie into the Elasticsearch index
-            es.index(index="movies", body=movie)
+            es.index(index="movies", document=movie)
 
 
 es = elasticsearch.Elasticsearch(["http://localhost:9200"])
