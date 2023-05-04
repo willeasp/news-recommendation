@@ -9,8 +9,8 @@ class AftonbladetSpider(scrapy.Spider):
     allowed_domains = ["www.aftonbladet.se"]
 
     def start_requests(self):
-        for page_id in range(10):
-            yield scrapy.Request(url=f"https://www.aftonbladet.se/nyheter?pageID={str(page_id)}", callback=self.parse)
+        for page_id in range(50):
+            yield scrapy.Request(url=f"https://www.aftonbladet.se/nyheter?pageId={str(page_id)}", callback=self.parse)
 
     def parse(self, response):
         articles = response.xpath('//*[@id="main"]/div[1]/main/section/*')
