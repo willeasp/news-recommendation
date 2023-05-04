@@ -5,9 +5,7 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
 import elasticsearch
-from scrapy import settings
 
 
 class NewsScraperPipeline:
@@ -15,9 +13,33 @@ class NewsScraperPipeline:
         return item
 
 class ElasticSearchPipeline:
-    es = elasticsearch.Elasticsearch("http://localhost:9200")
+
+    def __init__(self):
+        self.es = elasticsearch.Elasticsearch("http://localhost:9200")
+
+    def open_spider(self, spider):
+        if not self.es.indices.exists(index="news"):
+            spider.logger.info("Creating index news")
+            self.es.indices.create(index="news", body={
+                "mappings": {
+                    "properties": {
+                        "title": { "type": "text" },
+                        "url": { "type": "keyword" },
+                        "text": { "type": "text" },
+                        "date": { "type": "date" }
+                    }
+                }
+            })
+        else:
+            spider.logger.info("Index news already exists")
 
     def process_item(self, item, spider):
+
+        # search for the url in the index
+        res = self.es.search(index="news", body={"query": {"match": {"url": item['url']}}})
+        # if the url is already in the index, we don't need to add it again
+        if res['hits']['total']['value'] != 0:
+            return item
 
         self.es.index(index="news", document=dict(item), op_type="create")
 
