@@ -26,7 +26,8 @@ class ElasticSearchPipeline:
                         "title": { "type": "text" },
                         "url": { "type": "keyword" },
                         "text": { "type": "text" },
-                        "date": { "type": "date" }
+                        "date": { "type": "date" },
+                        "publisher": { "type": "keyword" },
                     }
                 }
             })
