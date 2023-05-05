@@ -48,6 +48,8 @@ class AftonbladetSpider(scrapy.Spider):
         except:
             item['date'] = datetime.today()
 
+        item['publisher'] = "aftonbladet"
+
         yield item
 
     def month_to_number(self, datestring: str):

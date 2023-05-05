@@ -13,3 +13,4 @@ class NewsScraperItem(scrapy.Item):
     url = scrapy.Field()
     text = scrapy.Field()
     date = scrapy.Field()
+    publisher = scrapy.Field()
