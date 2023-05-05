@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const logos = {
+  'nytimes': './nytimes.png',
+  'aftonbladet': './aftonbladet.svg',
+}
+
 const NewsSearch = () => {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
@@ -41,8 +46,20 @@ const NewsSearch = () => {
 
   const expand = (idx) => {
 
-    const art = document.querySelectorAll(".textDiv")
+    const art = document.querySelectorAll("#text")
+    var nr = 0;
+
+    art.forEach((_) => {
+      if (idx === nr) {
+        document.getElementById(`text-${nr}`).classList.remove('articleSmall');
+      }
+      else {
+        document.getElementById(`text-${nr}`).classList.add('articleSmall')
+      }
+      nr = nr + 1;
+    })
     
+    /*
     var nr = 0;
     art.forEach((_) => {
       if (idx === nr) {
@@ -54,7 +71,7 @@ const NewsSearch = () => {
         document.getElementById(`text-${nr}`).style.height = '0px';
       }
       nr = nr + 1;
-    })
+    }*/
 
     setOpen(idx)
   }
@@ -88,15 +105,19 @@ const NewsSearch = () => {
       <div className="results" id='results' onScroll={(e) => console.log(e)} >
         {results.map((item, idx) => { return (
           <div key={idx} className="article">
-            <h1>{item._source.title}</h1>
-            <p>{item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}</p>
-            <div className="textDiv" id={`text-${idx}`}>
-              <div className="text">
-                {item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}
-              </div>
+            <div className="title-logo">
+              <h1>{item._source.title}</h1>
+              <img src={logos[item._source.publisher]} />
+            </div>
+            <h2>{item._source.date.split("T")[0]}</h2>
+            <div id='text'>
+              <p className="articleText articleSmall" id={`text-${idx}`}>{item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}</p>
             </div>
             <div className="buttons">
-              {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
+              <div className="buttons2">
+                {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
+                <button onClick={() => window.open(item._source.url)}>Gå till artikel</button>
+              </div>
               <div className="checkbox" onClick={() => {moreLikeThis(idx)}}>
                 <div id={`article-${idx}`}></div>
                 Mer som detta
