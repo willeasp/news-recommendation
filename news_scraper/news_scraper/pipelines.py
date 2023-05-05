@@ -42,6 +42,6 @@ class ElasticSearchPipeline:
         if res['hits']['total']['value'] != 0:
             return item
 
-        self.es.index(index="news", document=dict(item), op_type="create")
+        self.es.index(index="news", body=dict(item), op_type="create")
 
         return item
