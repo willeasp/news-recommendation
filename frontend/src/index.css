@@ -102,19 +102,46 @@ form input:focus {
   overflow: hidden;
 }
 
+.title-logo {
+  display: flex;
+  justify-content: space-between;
+  gap: 50px;
+  align-items: flex-start;
+}
+
 .article h1 {
   margin: 0px;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 14px;
 }
 
-.article p {
+.article h2 {
+  margin: 0px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  font-weight: 200;
+  font-size: 12px;
+}
+
+.article img {
+  width: 100px;
+  height: 20px;
+  margin: 0px;
+  object-fit: cover;
+}
+
+.articleText {
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   color: #222222;
+  text-align: justify;
+  transition: 0.5s ease all;
+}
+
+.articleSmall {
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  text-align: left;
 }
 
 .textDiv {
@@ -139,6 +166,26 @@ form input:focus {
 }
 
 .buttons button {
+  height: 40px;
+  width: 100px;
+  background-color: #F6F6F6;
+  border: 2px solid #222222;
+  color: #222222;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant: small-caps;
+  box-shadow: 4px 5px #222222;
+  transition: 0.4s ease all;
+}
+
+.buttons2 {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.buttons2 button {
   height: 40px;
   width: 100px;
   background-color: #F6F6F6;
