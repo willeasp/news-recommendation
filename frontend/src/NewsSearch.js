@@ -9,8 +9,18 @@ const logos = {
 const NewsSearch = () => {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
-  const [relevance, setRelevance] = useState([])
+  const [relevance, setRelevance] = useState([]);
   const [open, setOpen] = useState(-1);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getLatest = async () => {
+      const res = await axios.get("http://localhost:5001/latest")
+      setResults(res.data.hits.hits)
+      setLoading(false);
+    }
+    getLatest()
+  }, [])
   
   const checkbox = (name) => {
     if (document.getElementById(name).style.backgroundColor === "rgb(48, 107, 52)") {
@@ -31,6 +41,7 @@ const NewsSearch = () => {
 
   const getResults = async () => {
     console.log("Searching for articles");
+    setLoading(true);
     
     const res = await axios.get("http://localhost:5001/search", {
       params: {
@@ -41,6 +52,7 @@ const NewsSearch = () => {
     setRelevance(Array.apply(null, Array(res.data.hits.hits.length)).map(_ => false))
     console.log(res.data.hits.hits);
     setResults(res.data.hits.hits);
+    setLoading(false);
     
   }
 
@@ -58,20 +70,7 @@ const NewsSearch = () => {
       }
       nr = nr + 1;
     })
-    
-    /*
-    var nr = 0;
-    art.forEach((_) => {
-      if (idx === nr) {
-        const height = document.getElementById(`text-${nr}`).children[0].offsetHeight
-        console.log(idx);
-        document.getElementById(`text-${nr}`).style.height = `${height}px`;
-      }
-      else {
-        document.getElementById(`text-${nr}`).style.height = '0px';
-      }
-      nr = nr + 1;
-    }*/
+
 
     setOpen(idx)
   }
@@ -98,33 +97,33 @@ const NewsSearch = () => {
           Sök efter artikel
           <div className="input">
             <input type='text' value={search} onChange={ (e) => setSearch(e.target.value) } />
-            <button onClick={(e) => { getResults(); e.preventDefault(); } }>Sök</button>
+            <button disabled={loading ? true : false} onClick={(e) => { getResults(); e.preventDefault(); } }>{loading ? <img src='./loader.gif' className='loader' /> : 'Sök'}</button>
           </div>
         </label>
       </form>
       <div className="results" id='results' onScroll={(e) => console.log(e)} >
-        {results.map((item, idx) => { return (
-          <div key={idx} className="article">
-            <div className="title-logo">
-              <h1>{item._source.title}</h1>
-              <img src={logos[item._source.publisher]} />
-            </div>
-            <h2>{item._source.date.split("T")[0]}</h2>
-            <div id='text'>
-              <p className="articleText articleSmall" id={`text-${idx}`}>{item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}</p>
-            </div>
-            <div className="buttons">
-              <div className="buttons2">
-                {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
-                <button onClick={() => window.open(item._source.url)}>Gå till artikel</button>
+          {results.map((item, idx) => { return (
+            <div key={idx} className="article">
+              <div className="title-logo">
+                <h1>{item._source.title}</h1>
+                <img src={logos[item._source.publisher]} />
               </div>
-              <div className="checkbox" onClick={() => {moreLikeThis(idx)}}>
-                <div id={`article-${idx}`}></div>
-                Mer som detta
-              </div>        
+              <h2>{item._source.date.split("T")[0]}</h2>
+              <div id='text'>
+                <p className="articleText articleSmall" id={`text-${idx}`}>{item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}</p>
+              </div>
+              <div className="buttons">
+                <div className="buttons2">
+                  {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
+                  <button onClick={() => window.open(item._source.url)}>Gå till artikel</button>
+                </div>
+                <div className="checkbox" onClick={() => {moreLikeThis(idx)}}>
+                  <div id={`article-${idx}`}></div>
+                  Mer som detta
+                </div>        
+              </div>
             </div>
-          </div>
-        )})}
+          )})}
       </div>
     </div>
   )

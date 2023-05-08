@@ -242,3 +242,9 @@ form input:focus {
 .checkbox:active {
   scale: 0.95;
 }
+
+.loader {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -71,6 +71,26 @@ def recommend():
 
     return jsonify(res)
 
+@app.route("/latest", methods=["GET"])
+def latest():
+
+    query = {
+        "query": {
+            "match_all": {},
+        },
+        "sort": {
+            "date": {
+                "order": "desc"
+            }
+        }
+    }
+
+    res = es.search(index="news", body=query, headers={
+        "Content-Type": "application/json"
+    })
+
+    return jsonify(res)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
