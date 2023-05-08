@@ -242,3 +242,7 @@ form input:focus {
 .checkbox:active {
   scale: 0.95;
 }
+
+.article-selected {
+  background-color: lightgreen;
+}

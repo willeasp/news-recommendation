@@ -72,5 +72,28 @@ def recommend():
     return jsonify(res)
 
 
+@app.route("/latest", methods=["GET"])
+def latest():
+    # get the (size) latest articles from the request query parameters
+    size = request.args.get("size")
+
+    # get the size latest articles from the index using the date field
+    res = es.search(index="news", body={
+        "query": {
+            "match_all": {}
+        },
+        "sort": [
+            {
+                "date": {
+                    "order": "desc"
+                }
+            }
+        ],
+        "size": size
+    })
+
+    return jsonify(res)
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

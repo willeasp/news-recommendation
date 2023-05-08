@@ -24,9 +24,11 @@ const NewsSearch = () => {
   }
 
   const toggleRelevance = (idx) => {
-    var data = [...relevance];
-    data[idx] = !data[idx];
-    setRelevance(data)
+    if (relevance.find((id) => id === idx) !== undefined) {
+      setRelevance(relevance.filter((id) => id !== idx) || []);
+    } else {
+      setRelevance([...relevance, idx]);
+    }
   }
 
   const getResults = async () => {
@@ -41,7 +43,6 @@ const NewsSearch = () => {
     setRelevance(Array.apply(null, Array(res.data.hits.hits.length)).map(_ => false))
     console.log(res.data.hits.hits);
     setResults(res.data.hits.hits);
-    
   }
 
   const expand = (idx) => {
@@ -76,6 +77,16 @@ const NewsSearch = () => {
     setOpen(idx)
   }
 
+  const getLatest = async () => {
+    console.log("Getting latest articles");
+    const res = await axios.get("http://localhost:5001/latest", {
+      params: {
+        size: 20,
+      }
+    });
+    setResults(res.data.hits.hits);
+  }
+
   const moreLikeThis = async (idx) => {
 
     console.log(`Want more articles which are like: ${results[idx]._source.title}`);
@@ -88,8 +99,13 @@ const NewsSearch = () => {
 
     setRelevance(Array.apply(null, Array(res.data.hits.hits.length)).map(_ => false))
     setResults(res.data.hits.hits);
-
   }
+
+  useEffect(() => {
+    getLatest();
+  }, []);
+
+  console.log(relevance)
 
   return (
     <div className="container">
@@ -103,13 +119,15 @@ const NewsSearch = () => {
         </label>
       </form>
       <div className="results" id='results' onScroll={(e) => console.log(e)} >
-        {results.map((item, idx) => { return (
+        {results.map((item, idx) => {
+          const [date, time] = item._source.date.split("T");
+          return (
           <div key={idx} className="article">
             <div className="title-logo">
               <h1>{item._source.title}</h1>
               <img src={logos[item._source.publisher]} />
             </div>
-            <h2>{item._source.date.split("T")[0]}</h2>
+            <h2>{`${date} kl. ${time}`}</h2>
             <div id='text'>
               <p className="articleText articleSmall" id={`text-${idx}`}>{item._source.text.replace("NYHETER", "").replace("Av:", "").trim()}</p>
             </div>
@@ -118,8 +136,11 @@ const NewsSearch = () => {
                 {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
                 <button onClick={() => window.open(item._source.url)}>Gå till artikel</button>
               </div>
-              <div className="checkbox" onClick={() => {moreLikeThis(idx)}}>
-                <div id={`article-${idx}`}></div>
+              <div className={[
+                    'checkbox',
+                    relevance.find((id) => id === item._id) !== undefined ? 'article-selected' : ''
+                  ].join(' ')
+              } onClick={() => {toggleRelevance(item._id)}}>
                 Mer som detta
               </div>        
             </div>
