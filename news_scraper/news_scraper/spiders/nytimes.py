@@ -30,7 +30,7 @@ class NytimesSpider(scrapy.Spider):
         article = response.xpath('//article')
         item["title"] = article.xpath(".//h1/text()").get()
         item["text"] = '\n'.join(article.xpath(".//section//p/text()").getall())
-        item["date"] = datetime.fromisoformat(article.xpath(".//time/@datetime").get())
+        item["date"] = datetime.fromisoformat(article.xpath(".//time/@datetime").get().replace('Z', ''))
         item["publisher"] = "nytimes"
 
         yield item
