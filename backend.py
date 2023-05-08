@@ -1,78 +1,51 @@
 import elasticsearch
-import requests
-import csv
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import traceback
 
-from elasticsearch_dsl import Search
-from elasticsearch_dsl.query import MoreLikeThis
+from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 es = elasticsearch.Elasticsearch(["http://localhost:9200"])
 
-@app.route("/search", methods=["GET"])
+
+@app.route("/search", methods=["POST"])
+@cross_origin(origins="*")
 def search():
-    # get the search query from the request query parameters
-    title = request.args.get("title")
+    query = request.args.get("query")
 
-    print("in search")
+    relevant = request.json["relevant"]
 
-    query = {
-        "query": {
-            "multi_match": {
-                "query": title,
-                "fields": [
-                    "title^3",
-                    "text",
-                ],
-                "fuzziness": "AUTO",
-            }
-        }
-    }
+    must = [ { "multi_match": {
+        "query": query,
+        "fields": [
+            "title^3",
+            "text",
+        ],
+        "fuzziness": "AUTO",
+    } } ]
 
-    res = es.search(index="news", body=query, headers={
+    if relevant:
+        must.append({ "more_like_this": {
+            "fields": ["title", "text"],
+            "like": [ { "_index": "news", "_id": id } for id in relevant ],
+            "min_term_freq": 1,
+            "max_query_terms": 12
+        } } )
+
+    body = { "query": { "bool": { "must": must } } }
+
+    res = es.search(index="news", body=body, headers={
         "Content-Type": "application/json"
     })
 
-    return jsonify(res)
-
-
-# Rekommendationsfunktionen
-@app.route("/recommend", methods=["GET", "POST"])
-def recommend():
-
-    # app.logger.info('Received request: %s %s', request.method, request.url)
-
-    # Ta ut fält från filmen som ska rekommenderas efter
-    # name = request.json['name']
-    title = request.args.get("title")
-    text = request.args.get("text")
-
-    print(title)
-    # release_date = request.json['release_date']
-
-    # Elasticsearch_DSL's "Search" metod verkar behöva användas för MoreLikeThis
-    es_search = Search(index='news').using(es)
-
-    results = es_search.query(MoreLikeThis(
-        # Det ska gå att ha listor i "like" också om man vill jämföra med mer än en sak men går inte riktigt att göra med film-systemet
-        like=[title, text],
-        fields=["title", "text"],  # Fält att jämföra med
-        min_term_freq=1,
-        min_doc_freq=1))
-
-    # Elasticsearch_DSL ger ut svaren i annat format så behöver konverteras
-    res = results.execute().to_dict()
-
-    # Samma som för vanlig sökning
-
-    return jsonify(res)
+    return jsonify(res.body)
 
 
 @app.route("/latest", methods=["GET"])
+@cross_origin(origins="*")
 def latest():
     # get the (size) latest articles from the request query parameters
     size = request.args.get("size")
@@ -92,7 +65,7 @@ def latest():
         "size": size
     })
 
-    return jsonify(res)
+    return jsonify(res.body)
 
 
 if __name__ == "__main__":
