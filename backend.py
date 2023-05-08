@@ -4,6 +4,7 @@ import csv
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import traceback
+import json
 
 from elasticsearch_dsl import Search
 from elasticsearch_dsl.query import MoreLikeThis
@@ -12,6 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 es = elasticsearch.Elasticsearch(["http://localhost:9200"])
+
 
 @app.route("/search", methods=["GET"])
 def search():
@@ -44,23 +46,24 @@ def search():
 @app.route("/recommend", methods=["GET", "POST"])
 def recommend():
 
-    # app.logger.info('Received request: %s %s', request.method, request.url)
+    # Ta emot dokument
+    received_docs = request.args.get("documents")
+    documents = json.loads(received_docs)
 
-    # Ta ut fält från filmen som ska rekommenderas efter
-    # name = request.json['name']
-    title = request.args.get("title")
-    text = request.args.get("text")
+    # Kolla i loggen om dokumenten tas emot
+    for doc in documents:
+        print(doc["title"])
 
-    print(title)
-    # release_date = request.json['release_date']
+    # Bygg upp lista av dokument så som den borde vara i MoreLikeThis-delen sen <-- tror det är detta som blir fel på något sätt (?)
+    documents_list = [{"title": doc["title"], "text": doc["text"]}
+                      for doc in documents]
 
     # Elasticsearch_DSL's "Search" metod verkar behöva användas för MoreLikeThis
     es_search = Search(index='news').using(es)
 
     results = es_search.query(MoreLikeThis(
-        # Det ska gå att ha listor i "like" också om man vill jämföra med mer än en sak men går inte riktigt att göra med film-systemet
-        like=[title, text],
-        fields=["title", "text"],  # Fält att jämföra med
+        like=documents_list,  # Lista av dokument istället för bara ett dokument
+        fields=["title", "text"],
         min_term_freq=1,
         min_doc_freq=1))
 
@@ -68,7 +71,6 @@ def recommend():
     res = results.execute().to_dict()
 
     # Samma som för vanlig sökning
-
     return jsonify(res)
 
 

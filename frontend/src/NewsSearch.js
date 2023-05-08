@@ -11,6 +11,7 @@ const NewsSearch = () => {
   const [results, setResults] = useState([]);
   const [relevance, setRelevance] = useState([])
   const [open, setOpen] = useState(-1);
+  const [likedNews, setLikedNews] = useState([]);
   
   const checkbox = (name) => {
     if (document.getElementById(name).style.backgroundColor === "rgb(48, 107, 52)") {
@@ -76,19 +77,30 @@ const NewsSearch = () => {
     setOpen(idx)
   }
 
-  const moreLikeThis = async (idx) => {
+  //Samlar nyheter som ska rekommenderas efter i en lista m. rätt format
+  const handleLikedNews = async (idx) => {
+    console.log(`Adding the following article to liked news: ${results[idx]._source.title}`);
+    setLikedNews([...likedNews, {"title": results[idx]._source.title, "text": results[idx]._source.text}]);
+  };
 
-    console.log(`Want more articles which are like: ${results[idx]._source.title}`);
-    const res = await axios.get("http://localhost:5001/recommend", {
-      params: {
-        title: results[idx]._source.title,
-        text: results[idx]._source.text,
-      }
-    });
+  //Ändrad så att denna körs när man trycker på "rek." knappen, går nog att göra på ett snyggare sätt
+  const moreLikeThis = async () => {
+    if (likedNews.length === 0){
+      console.log("No liked news selected");
+    } else {
+      console.log("Fetching recommendations");
+      //console.log(`Want more articles which are like: ${results[idx]._source.title}`);
+      const res = await axios.get("http://localhost:5001/recommend", {
+        params: {
+          documents: JSON.stringify(likedNews),
+        },},);
+      console.log("Recommendations fetched")
+      console.log(res)
 
-    setRelevance(Array.apply(null, Array(res.data.hits.hits.length)).map(_ => false))
-    setResults(res.data.hits.hits);
-
+      setRelevance(Array.apply(null, Array(res.data.hits.hits.length)).map(_ => false))
+      setResults(res.data.hits.hits);
+      setLikedNews([]);
+    }
   }
 
   return (
@@ -99,6 +111,7 @@ const NewsSearch = () => {
           <div className="input">
             <input type='text' value={search} onChange={ (e) => setSearch(e.target.value) } />
             <button onClick={(e) => { getResults(); e.preventDefault(); } }>Sök</button>
+            <button onClick={(e) => { moreLikeThis(); e.preventDefault(); } }>Rek.</button>
           </div>
         </label>
       </form>
@@ -118,7 +131,7 @@ const NewsSearch = () => {
                 {open === idx ? <button onClick={() => expand(-1)}>Läs mindre</button> : <button onClick={() => expand(idx)}>Läs mer</button>}
                 <button onClick={() => window.open(item._source.url)}>Gå till artikel</button>
               </div>
-              <div className="checkbox" onClick={() => {moreLikeThis(idx)}}>
+              <div className="checkbox" onClick={() => {handleLikedNews(idx)}}>
                 <div id={`article-${idx}`}></div>
                 Mer som detta
               </div>        
