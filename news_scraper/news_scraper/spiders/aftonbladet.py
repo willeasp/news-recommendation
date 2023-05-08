@@ -1,3 +1,4 @@
+import locale
 from datetime import datetime
 
 import scrapy
@@ -39,32 +40,15 @@ class AftonbladetSpider(scrapy.Spider):
 
         item['text'] = "\n".join(article.xpath('.//p/text()').getall())
 
-        # parse date as datetime in the format dd Month yyyy where month is in swedish
-        try:
-            date = article.xpath('.//time/strong[2]/text()').get()
-            date = date.split()
-            date[1] = self.month_to_number(date[1])
-            item['date'] = datetime(int(date[2]), int(date[1]), int(date[0]))
-        except:
-            item['date'] = datetime.today()
+        time_str = article.xpath('.//time/@aria-label').get()
+        format_str = "Publicerad: %d %B %Y kl. %H.%M"
+
+        # Set the locale to Swedish
+        locale.setlocale(locale.LC_ALL, 'sv_SE.UTF-8')
+
+        # Parse the time string into a datetime object
+        item['date'] = datetime.strptime(time_str, format_str)
 
         item['publisher'] = "aftonbladet"
 
         yield item
-
-    def month_to_number(self, datestring: str):
-        months = {
-            'januari': '01',
-            'februari': '02',
-            'mars': '03',
-            'april': '04',
-            'maj': '05',
-            'juni': '06',
-            'juli': '07',
-            'augusti': '08',
-            'september': '09',
-            'oktober': '10',
-            'november': '11',
-            'december': '12'
-        }
-        return int(months[datestring.lower()])
