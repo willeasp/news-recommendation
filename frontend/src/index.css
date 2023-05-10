@@ -19,6 +19,16 @@ body {
   position: relative;
 }
 
+.container h3 {
+  width: calc(40vw + 68px);
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color:#306B34;
+  text-transform: lowercase;
+}
+
 form {
   display: flex;
   flex-direction: column;
@@ -212,7 +222,7 @@ form input:focus {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 40px;
+  height: 36px;
   width: 150px;
   background-color: #F6F6F6;
   border: 2px solid #222222;
@@ -244,5 +254,7 @@ form input:focus {
 }
 
 .article-selected {
-  background-color: lightgreen;
+  background-color: #306B34;
+  color: white;
+  border-color:#306B34;
 }

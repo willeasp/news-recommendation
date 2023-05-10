@@ -35,7 +35,7 @@ def search():
             "max_query_terms": 12
         } } )
 
-    body = { "query": { "bool": { "must": must } } }
+    body = { "query": { "bool": { "must": must } }, "size": 10000 }
 
     res = es.search(index="news", body=body, headers={
         "Content-Type": "application/json"
@@ -66,7 +66,6 @@ def latest():
     })
 
     return jsonify(res.body)
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

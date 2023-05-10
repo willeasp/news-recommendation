@@ -11,17 +11,7 @@ const NewsSearch = () => {
   const [results, setResults] = useState([]);
   const [relevance, setRelevance] = useState([])
   const [open, setOpen] = useState(-1);
-
-  const checkbox = (name) => {
-    if (document.getElementById(name).style.backgroundColor === "rgb(48, 107, 52)") {
-      document.getElementById(name).style.backgroundColor = "";
-      document.getElementById(name).style.borderColor = "#222222";
-    }
-    else {
-      document.getElementById(name).style.backgroundColor = "#306B34";
-      document.getElementById(name).style.borderColor = "#306B34";
-    }
-  }
+  const [time, setTime] = useState('');
 
   const toggleRelevance = (idx) => {
     if (relevance.find((id) => id === idx) !== undefined) {
@@ -32,15 +22,35 @@ const NewsSearch = () => {
   }
 
   const search = async () => {
-    console.log("Searching for articles");
 
-    const res = await axios.post("http://localhost:5001/search",
-{ relevant: relevance, },
-{ params: { query: query, }, headers: { 'Content-Type': 'application/json', }
-    });
+    const start = performance.now()
 
-    console.log(res.data.hits.hits);
-    setResults(res.data.hits.hits);
+    const getResults = async () => {
+      console.log("Searching for articles");
+      if (query.length === 0) {
+        getLatest()
+      }
+      else {
+        const res = await axios.post("http://localhost:5001/search",
+              { relevant: relevance, },
+              { params: { query: query, }, headers: { 'Content-Type': 'application/json', }
+            });
+                  setRelevance([]);
+            setResults(res.data.hits.hits);
+            return res.data.hits.hits;
+      }
+    }
+
+    const res = await getResults() || [];
+    const end = performance.now()
+    console.log(res);
+    if (res.length > 0) {
+      setTime(`${(end - start).toFixed(2)} ms`);
+    }
+    else {
+      setTime('')
+    }
+
   }
 
   const expand = (idx) => {
@@ -62,20 +72,32 @@ const NewsSearch = () => {
   }
 
   const getLatest = async () => {
-    console.log("Getting latest articles");
-    const res = await axios.get("http://localhost:5001/latest", {
-      params: {
-        size: 20,
-      }
-    });
-    setResults(res.data.hits.hits);
+
+    const getResults = async () => {
+      console.log("Getting latest articles");
+      const res = await axios.get("http://localhost:5001/latest", {
+        params: {
+          size: 20,
+        }
+      });
+      setResults(res.data.hits.hits);
+    }
+
+    const start = performance.now();
+    await getResults();
+    const end = performance.now();
+    if (results.length > 0) {
+      setTime(`${(end - start).toFixed(2)} ms`);
+    }
+    else {
+      setTime('')
+    }
+
   }
 
   useEffect(() => {
     getLatest();
   }, []);
-
-  console.log(relevance)
 
   return (
     <div className="container">
@@ -88,6 +110,9 @@ const NewsSearch = () => {
           </div>
         </label>
       </form>
+      {time.length > 0 && (
+        <h3>Hämtade {results.length} resultat på {time}</h3>
+      )}
       <div className="results" id='results' onScroll={(e) => console.log(e)} >
         {results.map((item, idx) => {
           const [date, time] = item._source.date.split("T");
